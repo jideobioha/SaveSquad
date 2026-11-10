@@ -58,13 +58,6 @@ export function NewSquadForm() {
         </label>
       </div>
 
-      <label className="block">
-        <span className="text-sm font-semibold">Your weekly save</span>
-        <input name="weekly" required inputMode="decimal" defaultValue="10" className={field} />
-        <span className="mt-1 block text-xs text-muted">
-          Hit this each week to keep your streak alive.
-        </span>
-      </label>
 
       <fieldset>
         <legend className="text-sm font-semibold">How do we contribute?</legend>

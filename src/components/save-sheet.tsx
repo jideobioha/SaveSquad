@@ -2,21 +2,33 @@
 
 import { useActionState, useState } from "react";
 import { formatMoney } from "@/lib/money";
-import { chipIn, type ChipInState } from "./actions";
+import { recordSave, type SaveState } from "@/app/save-actions";
 
 const QUICK = [5, 10, 20, 50];
 
-export function ChipIn({ squadId }: { squadId: string }) {
+type Props = {
+  destination: { squadId: string } | { goalId: string };
+  buttonLabel: string;
+  title: string;
+  submitLabel: string;
+  defaultAmount?: number;
+  buttonClassName?: string;
+};
+
+export function SaveSheet({
+  destination,
+  buttonLabel,
+  title,
+  submitLabel,
+  defaultAmount,
+  buttonClassName = "w-full rounded-full bg-brand py-3.5 font-bold text-white transition hover:bg-brand-dark",
+}: Props) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [state, action, pending] = useActionState<ChipInState, FormData>(
+  const [amount, setAmount] = useState(defaultAmount ? String(defaultAmount) : "");
+  const [state, action, pending] = useActionState<SaveState, FormData>(
     async (prev, formData) => {
-      const result = await chipIn(squadId, prev, formData);
-      // Close the sheet after each successful save.
-      if (result.status === "done") {
-        setOpen(false);
-        setAmount("");
-      }
+      const result = await recordSave(destination, prev, formData);
+      if (result.status === "done") setOpen(false);
       return result;
     },
     { status: "idle" },
@@ -26,25 +38,26 @@ export function ChipIn({ squadId }: { squadId: string }) {
     <>
       {state.status === "done" && !open && (
         <p className="mb-2 text-center text-sm font-semibold text-brand">
-          🎉 You chipped in {formatMoney(Number(state.message), { showCents: true })}
+          🎉 Saved {formatMoney(state.amountCents ?? 0, { showCents: true })} · +{state.xpGained} XP
+          {state.weekCompleted && " · Streak saved!"}
         </p>
       )}
-      <button
-        onClick={() => setOpen(true)}
-        className="w-full rounded-full bg-brand py-3.5 font-bold text-white transition hover:bg-brand-dark"
-      >
-        Chip in
+      <button onClick={() => setOpen(true)} className={buttonClassName}>
+        {buttonLabel}
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+          onClick={() => setOpen(false)}
+        >
           <form
             action={action}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-3xl bg-background p-6 pb-10"
+            className="w-full max-w-md rounded-t-3xl bg-background p-6 pb-10 text-foreground"
           >
             <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-black/15" />
-            <h2 className="text-xl font-bold">How much did you save?</h2>
+            <h2 className="text-xl font-bold">{title}</h2>
             <p className="mt-1 text-sm text-muted">
               Self-reported. Move the money yourself, then log it here.
             </p>
@@ -84,7 +97,7 @@ export function ChipIn({ squadId }: { squadId: string }) {
               disabled={pending}
               className="mt-5 w-full rounded-full bg-brand py-3.5 font-bold text-white disabled:opacity-60"
             >
-              {pending ? "Saving…" : "Add to the squad"}
+              {pending ? "Saving…" : submitLabel}
             </button>
           </form>
         </div>

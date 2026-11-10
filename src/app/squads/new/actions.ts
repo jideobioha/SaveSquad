@@ -16,13 +16,11 @@ export async function createSquad(
 
   const name = String(formData.get("name") ?? "").trim();
   const targetCents = parseDollarsToCents(formData.get("target"));
-  const weeklyCents = parseDollarsToCents(formData.get("weekly"));
   const deadline = String(formData.get("deadline") ?? "");
   const mode = String(formData.get("mode") ?? "anytime");
 
   if (!name || name.length > 60) return { error: "Give your goal a name (up to 60 characters)." };
   if (!targetCents) return { error: "Enter a target amount, like 8000." };
-  if (!weeklyCents) return { error: "Enter how much you'll aim to save each week." };
   if (!deadline || new Date(deadline) <= new Date()) return { error: "Pick a deadline in the future." };
   if (!MODES.includes(mode as (typeof MODES)[number])) return { error: "Pick how you'll contribute." };
 
@@ -45,7 +43,7 @@ export async function createSquad(
 
   const { error: memberError } = await supabase
     .from("squad_members")
-    .insert({ squad_id: squad.id, user_id: userId, weekly_target_cents: weeklyCents });
+    .insert({ squad_id: squad.id, user_id: userId });
 
   if (memberError) return { error: memberError.message };
 
