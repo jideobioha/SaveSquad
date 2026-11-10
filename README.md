@@ -114,6 +114,29 @@ Supabase's free email sender only allows a few sign-in emails per hour. For test
 
 The display name defaults to the part of the email before `@`.
 
+### Demo data (past weeks)
+
+Streaks, leagues and badges take weeks to build up. To demo them now, fill in past weeks for one of your squads:
+
+1. Open [`supabase/demo/seed_past_weeks.sql`](./supabase/demo/seed_past_weeks.sql) and set `v_email` to your login email.
+2. Paste it into the Supabase **SQL Editor** and click **Run**.
+
+Everyone in your first squad gets ~6 weeks of on-time saves (friends randomly miss about 1 week in 5). Visit the **Me** tab afterward to collect badges. This file isn't a migration: only run it on purpose, and only once.
+
+### Sign-in emails for real users
+
+Supabase's built-in email sender only allows a few sign-in emails **per hour for the whole project**. Before inviting real friend groups, connect your own sender. The quickest option with no domain needed is a Gmail account (~500 emails/day):
+
+1. On the Gmail account you'll send from, turn on **2-Step Verification**, then create an **App password** at <https://myaccount.google.com/apppasswords> (name it "SaveSquad"). Copy the 16-character password.
+2. Supabase → **Authentication → Emails → SMTP Settings** → turn on **Enable custom SMTP**:
+   - Sender email: your Gmail address · Sender name: `SaveSquad`
+   - Host: `smtp.gmail.com` · Port: `465`
+   - Username: your Gmail address · Password: the app password
+3. Supabase → **Authentication → Rate Limits**: raise **emails per hour** (e.g. to 100).
+4. Send yourself a magic link to test. Check spam the first time and mark it "Not spam."
+
+For a public launch, use a transactional email service such as Resend or Postmark with your own domain instead.
+
 ### Environment variables
 
 | Name | Where to find it |
