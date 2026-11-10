@@ -47,7 +47,7 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] Squad screen: one shared progress bar, "Who's in", activity feed
 - [x] Chip in any amount, with the bar updating live for everyone
 - [x] Weekly streaks per member
-- [ ] First deploy to Vercel
+- [x] First deploy to Vercel
 
 ### Phase 2: The core loop
 - [ ] Pick-a-goal onboarding (Trip / Emergency fund / Down payment / Something else)
