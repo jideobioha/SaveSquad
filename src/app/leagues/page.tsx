@@ -130,7 +130,7 @@ async function League({ supabase }: { supabase: SupabaseClient }) {
                 }`}
               >
                 <span className="text-lg font-extrabold">{s.pct}%</span>
-                <span className={`text-[10px] ${s.is_mine ? "text-white/70" : "text-muted"}`}>on time</span>
+                <span className={`text-[10px] ${s.is_mine ? "text-white" : "text-muted"}`}>on time</span>
               </div>
             </div>
           ) : (
@@ -253,21 +253,21 @@ async function Duels({ supabase, userId, now }: { supabase: SupabaseClient; user
             <p className="text-xs font-extrabold text-lime">FRIEND DUEL · {d.challenge.toUpperCase()}</p>
             <div className="mt-4 flex items-center justify-around">
               <Duelist name="You" color="#5b3ff0" score={d.status === "active" ? `${myDays}/7` : ""} />
-              <span className="text-xl font-extrabold text-white/60">VS</span>
+              <span className="text-xl font-extrabold text-white">VS</span>
               <Duelist
                 name={them?.display_name ?? "Friend"}
                 color={them?.avatar_color ?? "#999"}
                 score={d.status === "active" ? `${theirDays}/7` : ""}
               />
             </div>
-            <p className="mt-3 text-center text-xs text-white/60">
+            <p className="mt-3 text-center text-xs text-white">
               {d.stake_cents > 0
                 ? `Loser funds the winner's goal ${formatMoney(d.stake_cents)}`
                 : "Just for bragging rights"}
             </p>
             {d.status === "pending" &&
               (meIsChallenger ? (
-                <p className="mt-3 text-center text-sm font-semibold text-white/80">
+                <p className="mt-3 text-center text-sm font-semibold text-white">
                   Waiting for {them?.display_name ?? "your friend"} to accept…
                 </p>
               ) : (

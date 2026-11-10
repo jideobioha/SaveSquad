@@ -10,7 +10,7 @@ export function Landing() {
         <p className="mt-3 text-2xl font-bold text-lime">
           Save solo. Win together.
         </p>
-        <p className="mt-6 text-base text-white/80">
+        <p className="mt-6 text-base text-white">
           Your streaks and challenges power your squad&apos;s shared goals.
         </p>
         <ul className="mt-8 space-y-3 text-sm font-semibold">
@@ -32,7 +32,7 @@ export function Landing() {
         >
           Get started
         </Link>
-        <p className="mt-4 text-center text-xs text-white/60">
+        <p className="mt-4 text-center text-xs text-white">
           Proof of concept · Team 317
         </p>
       </div>

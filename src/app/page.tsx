@@ -129,12 +129,12 @@ async function HomeContent() {
             </Link>
           </div>
           <p className="mt-1 text-lg font-bold">
-            {formatMoney(goalSaved)} <span className="text-white/60">/ {formatMoney(goal.target_cents)}</span>
+            {formatMoney(goalSaved)} <span className="text-white">/ {formatMoney(goal.target_cents)}</span>
           </p>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/20">
             <div className="h-full rounded-full bg-lime transition-[width] duration-700" style={{ width: `${goalPct}%` }} />
           </div>
-          <div className="mt-2 flex text-xs text-white/80">
+          <div className="mt-2 flex text-xs text-white">
             <span>{goalPct}% there</span>
             <span className="ml-auto">
               {lvl.toNext} XP to Level {lvl.level + 1}
@@ -207,9 +207,9 @@ async function HomeContent() {
         >
           <span className="text-3xl">🎡</span>
           <span className="flex-1">
-            <span className="block text-xs font-extrabold text-foreground/60">TODAY&apos;S CHALLENGE</span>
+            <span className="block text-xs font-extrabold text-foreground">TODAY&apos;S CHALLENGE</span>
             <span className="block font-bold">Spin the Save</span>
-            <span className="block text-xs text-foreground/70">
+            <span className="block text-xs text-foreground">
               +20 XP · {spinLeft ? "1 spin left" : "Done for today"}
             </span>
           </span>

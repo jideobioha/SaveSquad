@@ -95,12 +95,12 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl">🔥</span>
           <span className="text-5xl font-extrabold leading-none">{weeks}</span>
-          <span className="text-xs font-bold tracking-widest text-white/70">WEEKS</span>
+          <span className="text-xs font-bold tracking-widest text-white">WEEKS</span>
         </div>
       </div>
 
       <h1 className="mt-6 text-3xl font-extrabold">{weekCompleted ? "Streak saved!" : "Nice save!"}</h1>
-      <p className="mt-1 text-white/80">
+      <p className="mt-1 text-white">
         {weekCompleted
           ? weeks > 1 && weeks >= best
             ? `${weeks} weeks in a row. Your longest yet.`
@@ -148,7 +148,7 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
 
       <div className="mt-auto w-full space-y-2 pt-8">
         {weekCompleted && <ShareButton weeks={weeks} hasSquads={(squadCount ?? 0) > 0} />}
-        <Link href="/" className="block w-full py-3 font-bold text-white/90">
+        <Link href="/" className="block w-full py-3 font-bold text-white">
           Done
         </Link>
       </div>
@@ -160,7 +160,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-2xl bg-white/10 px-2 py-3">
       <p className="text-lg font-extrabold">{value}</p>
-      <p className="truncate text-[11px] text-white/70">{label}</p>
+      <p className="truncate text-[11px] text-white">{label}</p>
     </div>
   );
 }

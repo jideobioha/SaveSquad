@@ -84,7 +84,7 @@ async function GoalList() {
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <div className={`mt-2 flex text-xs ${isMain ? "text-white/80" : "text-muted"}`}>
+            <div className={`mt-2 flex text-xs ${isMain ? "text-white" : "text-muted"}`}>
               <span>
                 {formatMoney(saved)} of {formatMoney(g.target_cents)} · {pct}%
               </span>

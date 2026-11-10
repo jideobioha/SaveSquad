@@ -29,7 +29,7 @@ export function InviteCard({ code, squadName }: { code: string; squadName: strin
       <span className="text-2xl">🔗</span>
       <span className="flex-1">
         <span className="block font-bold">{copied ? "Link copied!" : "Invite friends"}</span>
-        <span className="block text-xs text-foreground/70">
+        <span className="block text-xs text-foreground">
           Anyone with the link can join this squad.
         </span>
       </span>

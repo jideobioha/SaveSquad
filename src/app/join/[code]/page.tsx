@@ -63,7 +63,7 @@ async function JoinContent({ params }: Pick<PageProps<"/join/[code]">, "params">
       <div className="mt-12">
         <p className="font-semibold text-lime">You&apos;re invited to save together</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">{squad.name}</h1>
-        <p className="mt-4 text-white/80">
+        <p className="mt-4 text-white">
           {formatMoney(squad.target_cents)} by {deadline} · {squad.member_count}{" "}
           {Number(squad.member_count) === 1 ? "member" : "members"} so far
         </p>
