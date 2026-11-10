@@ -150,7 +150,23 @@ supabase/
 
 ## Deployment
 
-Coming at the end of Phase 1: step-by-step Vercel (free tier) instructions.
+Hosted on the **Vercel Hobby (free)** plan. Every push to `main` deploys automatically.
+
+**First-time setup**
+
+1. Sign up at [vercel.com](https://vercel.com) with **Continue with GitHub** (choose the Hobby plan).
+2. **Add New… → Project**, then import the `SaveSquad` repo. If it isn't listed, click **Adjust GitHub App Permissions** and give Vercel access to it.
+3. Leave the framework (Next.js) and build settings as detected. Under **Environment Variables**, add the same two values as in `.env.local`:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+4. Click **Deploy**. When it finishes you'll get a URL like `https://savesquad-xyz.vercel.app`.
+5. In Supabase → **Authentication → URL Configuration**:
+   - Add `https://<your-app>.vercel.app/**` to **Redirect URLs** (keep the localhost one for development).
+   - Set **Site URL** to `https://<your-app>.vercel.app`.
+
+**Changing env vars later:** Vercel → Project → **Settings → Environment Variables**, then **Deployments → ⋯ → Redeploy**. New values only apply to new deployments.
+
+**Free-tier notes:** Vercel Hobby is for non-commercial use. A Supabase free project pauses after a week with no activity; restore it from the Supabase dashboard.
 
 ## Team
 
