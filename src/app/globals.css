@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* SaveSquad brand, taken from the Maker Day deck mockups. */
+:root {
+  --background: #f4f3fb;
+  --foreground: #16142b;
+  --card: #ffffff;
+  --muted: #6e6b85;
+  --brand: #5b3ff0;
+  --brand-dark: #4529d6;
+  --lime: #d4f25c;
+  --flame: #ff6b2c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-lime: var(--lime);
+  --color-flame: var(--flame);
+  --font-sans: var(--font-jakarta);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
