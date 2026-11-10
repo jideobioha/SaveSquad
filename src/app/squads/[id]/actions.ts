@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { requireUserId } from "@/lib/auth";
 import { parseDollarsToCents } from "@/lib/money";
 
-export type ChipInState = { status: "idle" | "done" | "error"; message?: string; at?: number };
+export type ChipInState = { status: "idle" | "done" | "error"; message?: string };
 
 const MAX_CENTS = 1_000_000; // $10,000 per save keeps typos from wrecking the bar.
 
@@ -26,5 +26,5 @@ export async function chipIn(
   if (error) return { status: "error", message: error.message };
 
   refresh();
-  return { status: "done", message: String(cents), at: Date.now() };
+  return { status: "done", message: String(cents) };
 }

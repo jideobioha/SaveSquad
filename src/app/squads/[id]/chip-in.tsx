@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { chipIn, type ChipInState } from "./actions";
 
@@ -10,17 +10,17 @@ export function ChipIn({ squadId }: { squadId: string }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [state, action, pending] = useActionState<ChipInState, FormData>(
-    chipIn.bind(null, squadId),
+    async (prev, formData) => {
+      const result = await chipIn(squadId, prev, formData);
+      // Close the sheet after each successful save.
+      if (result.status === "done") {
+        setOpen(false);
+        setAmount("");
+      }
+      return result;
+    },
     { status: "idle" },
   );
-
-  // Close the sheet after each successful save.
-  useEffect(() => {
-    if (state.status === "done") {
-      setOpen(false);
-      setAmount("");
-    }
-  }, [state.at, state.status]);
 
   return (
     <>

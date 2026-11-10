@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
 import { formatMoney } from "@/lib/money";
+import { ChipIn } from "./chip-in";
 import { InviteCard } from "./invite-card";
+import { LiveRefresh } from "./live-refresh";
 
 type Member = {
   user_id: string;
@@ -76,8 +78,22 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
             {pct}%
           </span>
         </div>
-        <div className="mt-3 h-3 overflow-hidden rounded-full bg-black/10">
-          <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+        {/* One shared bar. With amounts visible, each friend gets a segment in their color. */}
+        <div className="mt-3 flex h-3 gap-0.5 overflow-hidden rounded-full bg-black/10">
+          {squad.show_amounts ? (
+            members?.map((m) => {
+              const share = ((totals.get(m.user_id) ?? 0) / squad.target_cents) * 100;
+              return share > 0 ? (
+                <div
+                  key={m.user_id}
+                  className="h-full transition-[width] duration-700"
+                  style={{ width: `${Math.min(share, 100)}%`, background: m.profiles?.avatar_color }}
+                />
+              ) : null;
+            })
+          ) : (
+            <div className="h-full rounded-full bg-brand transition-[width] duration-700" style={{ width: `${pct}%` }} />
+          )}
         </div>
         <p className="mt-2 text-xs text-muted">One shared bar. Everyone sees it move.</p>
       </section>
@@ -86,7 +102,7 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
         <InviteCard code={squad.invite_code} squadName={squad.name} />
       </div>
 
-      <section className="mt-6">
+      <section className="mt-6 mb-4">
         <h3 className="font-bold">Who&apos;s in</h3>
         <ul className="mt-2 space-y-2">
           {members?.map((m) => {
@@ -110,6 +126,14 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
           })}
         </ul>
       </section>
+
+      <div className="sticky bottom-0 mt-auto bg-gradient-to-t from-background via-background pt-6 pb-6">
+        <ChipIn squadId={squad.id} />
+        <p className="mt-2 text-center text-xs text-muted">
+          Proof of concept: saves are self-reported. No real money moves.
+        </p>
+      </div>
+      <LiveRefresh squadId={squad.id} />
     </main>
   );
 }

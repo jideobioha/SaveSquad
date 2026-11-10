@@ -42,10 +42,10 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 
 ### Phase 1: Must-haves (the wedge: friend groups planning a trip)
 - [x] Sign in with an email magic link
-- [ ] Create a squad goal (name, target, deadline) and invite friends by link
-- [ ] Join a squad from an invite link
+- [x] Create a squad goal (name, target, deadline) and invite friends by link
+- [x] Join a squad from an invite link
 - [ ] Squad screen: one shared progress bar, "Who's in", activity feed
-- [ ] Chip in any amount, with the bar updating live for everyone
+- [x] Chip in any amount, with the bar updating live for everyone
 - [ ] Weekly streaks per member
 - [ ] First deploy to Vercel
 
@@ -103,6 +103,16 @@ Open <http://localhost:3000>. The app is designed for phone width, so use your b
 3. Click **Connect** at the top of the dashboard, or go to **Project Settings → API Keys**. Copy the **Project URL** and the **publishable key** into `.env.local`.
 4. Open **SQL Editor → New query**, paste the contents of each file in `supabase/migrations/` **in order**, and click **Run**.
 5. In **Authentication → URL Configuration**, set **Site URL** to `http://localhost:3000`. After deploying, add your Vercel URL too.
+
+### Test accounts (skip the email limit)
+
+Supabase's free email sender only allows a few sign-in emails per hour. For testing with several people:
+
+1. Go to Supabase → **Authentication → Users → Add user → Create new user**.
+2. Use any email (e.g. `maya@test.dev`) and a password, and tick **Auto Confirm User**.
+3. On the login page, tap **Sign in with a password (test accounts)**.
+
+The display name defaults to the part of the email before `@`.
 
 ### Environment variables
 

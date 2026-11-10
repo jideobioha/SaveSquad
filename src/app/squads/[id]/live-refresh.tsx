@@ -11,19 +11,40 @@ export function LiveRefresh({ squadId }: { squadId: string }) {
 
   useEffect(() => {
     const supabase = createClient();
-    const filter = `squad_id=eq.${squadId}`;
-    const channel = supabase
-      .channel(`squad-${squadId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "saves", filter }, () =>
-        router.refresh(),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "squad_members", filter }, () =>
-        router.refresh(),
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    (async () => {
+      // Realtime enforces the same privacy rules as the database, so it must
+      // know who's signed in *before* subscribing. Otherwise it connects as
+      // a logged-out visitor and every event is filtered out.
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (data.session) {
+        await supabase.realtime.setAuth(data.session.access_token);
+      }
+
+      const filter = `squad_id=eq.${squadId}`;
+      channel = supabase
+        .channel(`squad-${squadId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "saves", filter }, () =>
+          router.refresh(),
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "squad_members", filter },
+          () => router.refresh(),
+        )
+        .subscribe((status, err) => {
+          if (process.env.NODE_ENV === "development") {
+            console.log(`[live] squad ${squadId.slice(0, 8)}: ${status}`, err ?? "");
+          }
+        });
+    })();
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
     };
   }, [squadId, router]);
 
