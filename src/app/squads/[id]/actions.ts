@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { requireUserId } from "@/lib/auth";
+import { parseDollarsToCents } from "@/lib/money";
 
 export async function toggleCheer(squadId: string, saveId: string, cheered: boolean) {
   const { supabase, userId } = await requireUserId(`/squads/${squadId}`);
@@ -44,4 +45,36 @@ export async function setHideAmount(squadId: string, hide: boolean) {
     .eq("squad_id", squadId)
     .eq("user_id", userId);
   refresh();
+}
+
+export type WithdrawState = { status: "idle" | "done" | "error"; message?: string };
+
+export async function requestWithdrawal(
+  squadId: string,
+  _prev: WithdrawState,
+  formData: FormData,
+): Promise<WithdrawState> {
+  const { supabase } = await requireUserId(`/squads/${squadId}`);
+  const cents = parseDollarsToCents(formData.get("amount"));
+  if (!cents) return { status: "error", message: "Enter an amount." };
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 140);
+
+  const { error } = await supabase.rpc("request_withdrawal", {
+    p_squad_id: squadId,
+    p_amount_cents: cents,
+    p_reason: reason,
+  });
+  if (error) return { status: "error", message: error.message };
+  refresh();
+  return { status: "done" };
+}
+
+export async function voteWithdrawal(squadId: string, withdrawalId: string, approve: boolean) {
+  const { supabase } = await requireUserId(`/squads/${squadId}`);
+  const { error } = await supabase.rpc("vote_withdrawal", {
+    p_withdrawal_id: withdrawalId,
+    p_approve: approve,
+  });
+  refresh();
+  return { error: error?.message };
 }

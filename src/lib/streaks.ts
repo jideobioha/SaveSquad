@@ -53,3 +53,10 @@ export function daysLeftInWeek(now: Date) {
   const dow = (now.getUTCDay() + 6) % 7; // Mon=0 … Sun=6
   return 6 - dow;
 }
+
+// Monday 00:00 UTC of the current week.
+export function weekStart(now: Date) {
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d;
+}

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
-import { getProfile, getStreaks } from "@/lib/data";
+import { getProfile, getSquadTotals, getStreaks } from "@/lib/data";
 import { levelProgress } from "@/lib/levels";
 import { badgeById } from "@/lib/badges";
 import { formatMoney } from "@/lib/money";
@@ -39,12 +39,16 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
     .maybeSingle<Save>();
   if (!save) redirect("/");
 
-  const [profile, streaks, { data: destSaves }, { count: squadCount }] = await Promise.all([
+  const [profile, streaks, destTotal, { count: squadCount }] = await Promise.all([
     getProfile(supabase, userId),
     getStreaks(supabase, [userId]),
     save.goal_id
-      ? supabase.from("saves").select("amount_cents").eq("goal_id", save.goal_id)
-      : supabase.from("saves").select("amount_cents").eq("squad_id", save.squad_id!),
+      ? supabase
+          .from("saves")
+          .select("amount_cents")
+          .eq("goal_id", save.goal_id)
+          .then(({ data }) => (data ?? []).reduce((a, s) => a + s.amount_cents, 0))
+      : getSquadTotals(supabase, [save.squad_id!]).then((t) => t.get(save.squad_id!) ?? 0),
     supabase.from("squad_members").select("squad_id", { count: "exact", head: true }).eq("user_id", userId),
   ]);
   if (!profile) redirect("/");
@@ -57,7 +61,6 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
     thisWeek >= profile.weekly_target_cents && thisWeek - save.amount_cents < profile.weekly_target_cents;
 
   const dest = save.goals ?? save.squads;
-  const destTotal = (destSaves ?? []).reduce((a, s) => a + s.amount_cents, 0);
   const destPct = dest ? Math.min(100, Math.round((destTotal / dest.target_cents) * 100)) : 0;
 
   const xpGained = Number(xp) || 0;

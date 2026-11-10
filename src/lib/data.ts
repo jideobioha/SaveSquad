@@ -58,3 +58,24 @@ export const GOAL_EMOJI: Record<Goal["kind"], string> = {
   down_payment: "🏠",
   other: "✨",
 };
+
+// Squad balances: everything chipped in, minus approved withdrawals.
+export async function getSquadTotals(supabase: SupabaseClient, squadIds: string[]) {
+  const totals = new Map<string, number>();
+  if (squadIds.length === 0) return totals;
+  const [{ data: saves }, { data: withdrawals }] = await Promise.all([
+    supabase.from("saves").select("squad_id, amount_cents").in("squad_id", squadIds),
+    supabase
+      .from("withdrawals")
+      .select("squad_id, amount_cents")
+      .in("squad_id", squadIds)
+      .eq("status", "approved"),
+  ]);
+  for (const s of saves ?? []) {
+    totals.set(s.squad_id, (totals.get(s.squad_id) ?? 0) + s.amount_cents);
+  }
+  for (const w of withdrawals ?? []) {
+    totals.set(w.squad_id, (totals.get(w.squad_id) ?? 0) - w.amount_cents);
+  }
+  return totals;
+}

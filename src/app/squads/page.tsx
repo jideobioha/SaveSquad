@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
+import { getSquadTotals } from "@/lib/data";
 import { formatMoney } from "@/lib/money";
 
 type Row = {
@@ -53,14 +54,7 @@ async function SquadList() {
     );
   }
 
-  const { data: saves } = await supabase
-    .from("saves")
-    .select("squad_id, amount_cents")
-    .in("squad_id", squads.map((s) => s.id));
-  const totals = new Map<string, number>();
-  for (const s of saves ?? []) {
-    if (s.squad_id) totals.set(s.squad_id, (totals.get(s.squad_id) ?? 0) + s.amount_cents);
-  }
+  const totals = await getSquadTotals(supabase, squads.map((s) => s.id));
 
   return (
     <ul className="mt-5 space-y-3">

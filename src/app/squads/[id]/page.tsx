@@ -6,10 +6,11 @@ import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
 import { getStreaks } from "@/lib/data";
 import { formatMoney } from "@/lib/money";
-import { timeAgo } from "@/lib/streaks";
+import { timeAgo, weekStart } from "@/lib/streaks";
 import { CheerButton, HideAmountToggle, NudgeButton } from "./buttons";
 import { InviteCard } from "./invite-card";
 import { LiveRefresh } from "./live-refresh";
+import { VoteButtons, WithdrawButton } from "./withdrawals";
 
 type Member = {
   user_id: string;
@@ -25,7 +26,26 @@ type Post = {
   target_user_id: string | null;
   created_at: string;
 };
-type FeedItem = ({ type: "save" } & Save) | ({ type: "post" } & Post);
+type Withdrawal = {
+  id: string;
+  requested_by: string;
+  amount_cents: number;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  resolved_at: string | null;
+  withdrawal_votes: { user_id: string; approve: boolean }[];
+};
+type FeedItem =
+  | ({ type: "save" } & Save)
+  | ({ type: "post" } & Post)
+  | ({ type: "withdrawal"; user_id: string } & Withdrawal);
+
+const MODE_LABEL = {
+  anytime: "Chip in anytime",
+  equal_split: "Equal split",
+  weekly_auto: "Weekly",
+} as const;
 
 export default function SquadPage({ params }: PageProps<"/squads/[id]">) {
   return (
@@ -39,11 +59,18 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
   const { id } = await params;
   const { supabase, userId } = await requireUserId(`/squads/${id}`);
 
-  const [{ data: squad }, { data: membersData }, { data: savesData }, { data: postsData }] =
-    await Promise.all([
+  const [
+    { data: squad },
+    { data: membersData },
+    { data: savesData },
+    { data: postsData },
+    { data: withdrawalsData },
+  ] = await Promise.all([
       supabase
         .from("squads")
-        .select("id, name, target_cents, deadline, invite_code, show_amounts")
+        .select(
+          "id, name, target_cents, deadline, invite_code, show_amounts, contribution_mode, withdrawals_need_vote, join_league, created_by",
+        )
         .eq("id", id)
         .maybeSingle(),
       supabase
@@ -64,6 +91,15 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
         .order("created_at", { ascending: false })
         .limit(20)
         .returns<Post[]>(),
+      supabase
+        .from("withdrawals")
+        .select(
+          "id, requested_by, amount_cents, reason, status, created_at, resolved_at, withdrawal_votes(user_id, approve)",
+        )
+        .eq("squad_id", id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+        .returns<Withdrawal[]>(),
     ]);
 
   if (!squad) notFound();
@@ -114,8 +150,30 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
   // Hidden amounts are pooled into one grey segment so the bar never gives them away.
   const hiddenTotal = rows.filter((r) => r.hidden).reduce((a, r) => a + r.total, 0);
 
-  const total = saves.reduce((a, s) => a + s.amount_cents, 0);
+  const withdrawals = withdrawalsData ?? [];
+  const pending = withdrawals.filter((w) => w.status === "pending");
+  const gross = saves.reduce((a, s) => a + s.amount_cents, 0);
+  const withdrawn = withdrawals
+    .filter((w) => w.status === "approved")
+    .reduce((a, w) => a + w.amount_cents, 0);
+  const total = gross - withdrawn;
   const pct = Math.min(100, Math.round((total / squad.target_cents) * 100));
+  // After withdrawals, shrink everyone's segment proportionally so the bar shows what's left.
+  const segmentScale = gross > 0 ? total / gross : 1;
+
+  // "Your part" depends on how the squad contributes.
+  const myTotal = me?.total ?? 0;
+  const fairShare = Math.ceil(squad.target_cents / Math.max(1, members.length));
+  const weeksLeft = Math.max(
+    1,
+    Math.ceil((new Date(squad.deadline + "T00:00:00Z").getTime() - now.getTime()) / (7 * 86_400_000)),
+  );
+  const weeklyPart =
+    Math.ceil(Math.max(0, squad.target_cents - total) / weeksLeft / Math.max(1, members.length) / 100) * 100;
+  const weekStartIso = weekStart(now).toISOString();
+  const myThisWeek = saves
+    .filter((s) => s.user_id === userId && s.created_at >= weekStartIso)
+    .reduce((a, s) => a + s.amount_cents, 0);
   const deadline = new Date(squad.deadline + "T00:00:00").toLocaleDateString("en-US", {
     month: "short",
     year: "numeric",
@@ -124,6 +182,14 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
   const feed: FeedItem[] = [
     ...saves.map((s) => ({ type: "save" as const, ...s })),
     ...(postsData ?? []).map((p) => ({ type: "post" as const, ...p })),
+    ...withdrawals
+      .filter((w) => w.status !== "pending")
+      .map((w) => ({
+        type: "withdrawal" as const,
+        ...w,
+        user_id: w.requested_by,
+        created_at: w.resolved_at ?? w.created_at,
+      })),
   ]
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .slice(0, 20);
@@ -142,6 +208,17 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
         <p className="text-sm text-muted">
           {members.length} {members.length === 1 ? "friend" : "friends"} · by {deadline}
         </p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+          <span className="rounded-full bg-black/5 px-2 py-0.5">{MODE_LABEL[squad.contribution_mode as keyof typeof MODE_LABEL]}</span>
+          {squad.withdrawals_need_vote && <span className="rounded-full bg-black/5 px-2 py-0.5">🗳️ Withdrawals need a vote</span>}
+          {!squad.show_amounts && <span className="rounded-full bg-black/5 px-2 py-0.5">🙈 Amounts hidden</span>}
+          {squad.join_league && <span className="rounded-full bg-black/5 px-2 py-0.5">🏆 In the league</span>}
+          {squad.created_by === userId && (
+            <Link href={`/squads/${squad.id}/settings`} className="ml-auto text-sm font-bold text-brand">
+              Settings
+            </Link>
+          )}
+        </div>
       </section>
 
       <section className="mt-4 rounded-3xl bg-card p-5 shadow-sm">
@@ -157,7 +234,7 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
               ...rows.filter((r) => !r.hidden).map((r) => ({ key: r.user_id, cents: r.total, color: r.color })),
               { key: "hidden", cents: hiddenTotal, color: "#b9b6c9" },
             ].map((seg) => {
-              const share = (seg.cents / squad.target_cents) * 100;
+              const share = ((seg.cents * segmentScale) / squad.target_cents) * 100;
               return share > 0 ? (
                 <div
                   key={seg.key}
@@ -173,8 +250,75 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
             />
           )}
         </div>
-        <p className="mt-2 text-xs text-muted">One shared bar. Everyone sees it move.</p>
+        <p className="mt-2 text-xs text-muted">
+          One shared bar. Everyone sees it move.
+          {withdrawn > 0 && ` ${formatMoney(withdrawn)} withdrawn so far.`}
+        </p>
       </section>
+
+      {squad.contribution_mode === "equal_split" && (
+        <section className="mt-4 rounded-3xl bg-card p-5 shadow-sm">
+          <div className="flex items-baseline">
+            <h3 className="font-bold">Your share</h3>
+            <span className="ml-auto text-sm font-bold">
+              {formatMoney(myTotal)} <span className="text-muted">/ {formatMoney(fairShare)}</span>
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/10">
+            <div
+              className="h-full rounded-full bg-brand"
+              style={{ width: `${Math.min(100, (myTotal / fairShare) * 100)}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            Equal split: everyone puts in {formatMoney(fairShare)} ({formatMoney(squad.target_cents)} ÷{" "}
+            {members.length}).
+          </p>
+        </section>
+      )}
+
+      {squad.contribution_mode === "weekly_auto" && (
+        <section className="mt-4 flex items-center gap-3 rounded-3xl bg-card p-5 shadow-sm">
+          <span className="text-2xl">{myThisWeek >= weeklyPart ? "✅" : "🗓️"}</span>
+          <div className="flex-1">
+            <h3 className="font-bold">
+              This week: chip in {formatMoney(weeklyPart)}
+            </h3>
+            <p className="text-xs text-muted">
+              {myThisWeek >= weeklyPart
+                ? "Done for this week. Nice!"
+                : `You've put in ${formatMoney(myThisWeek)} so far. ${weeksLeft} ${weeksLeft === 1 ? "week" : "weeks"} to go.`}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {pending.length > 0 && (
+        <section className="mt-4 space-y-3">
+          {pending.map((w) => {
+            const requester = byId.get(w.requested_by);
+            const yes = w.withdrawal_votes.filter((v) => v.approve).length;
+            const mine = w.withdrawal_votes.find((v) => v.user_id === userId);
+            const needed = Math.floor(members.length / 2) + 1;
+            return (
+              <div key={w.id} className="rounded-3xl border-2 border-flame/30 bg-card p-5">
+                <p className="text-xs font-extrabold text-flame">🗳️ VOTE NEEDED</p>
+                <p className="mt-1 font-bold">
+                  {requester?.label ?? "Someone"} {requester?.isMe ? "want" : "wants"} to withdraw{" "}
+                  {formatMoney(w.amount_cents, { showCents: w.amount_cents % 100 !== 0 })}
+                </p>
+                {w.reason && <p className="text-sm text-muted">&ldquo;{w.reason}&rdquo;</p>}
+                <p className="mt-1 text-xs text-muted">
+                  {yes} of {needed} approvals needed · {timeAgo(w.created_at, now)}
+                </p>
+                {w.requested_by !== userId && (
+                  <VoteButtons squadId={squad.id} withdrawalId={w.id} myVote={mine ? mine.approve : null} />
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       <div className="mt-4">
         <InviteCard code={squad.invite_code} squadName={squad.name} />
@@ -224,7 +368,11 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
                   <Avatar name={who?.displayName ?? "?"} color={who?.color ?? "#999"} />
                   <span className="flex-1 text-sm">
                     <strong>{name}</strong>{" "}
-                    {item.type === "save"
+                    {item.type === "withdrawal"
+                      ? item.status === "approved"
+                        ? `withdrew ${formatMoney(item.amount_cents)}${item.reason ? ` for “${item.reason}”` : ""} ✅`
+                        : `asked to withdraw ${formatMoney(item.amount_cents)}: turned down by the squad`
+                      : item.type === "save"
                       ? who?.hidden
                         ? "chipped in"
                         : `chipped in ${formatMoney(item.amount_cents, { showCents: item.amount_cents % 100 !== 0 })}`
@@ -256,9 +404,10 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
           title="How much did you save?"
           submitLabel="Add to the squad"
         />
-        <p className="mt-2 text-center text-xs text-muted">
-          Proof of concept: saves are self-reported. No real money moves.
-        </p>
+        <div className="mt-2 flex items-center justify-between">
+          <p className="text-xs text-muted">Self-reported. No real money moves.</p>
+          {total > 0 && <WithdrawButton squadId={squad.id} needsVote={squad.withdrawals_need_vote} />}
+        </div>
       </div>
       <LiveRefresh squadId={squad.id} />
     </main>

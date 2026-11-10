@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-// Listens for new saves, members, posts and cheers in this squad and re-renders the page,
+// Listens for saves, members, posts, cheers, withdrawals and votes in this squad and re-renders the page,
 // so friends see the bar move without refreshing.
 export function LiveRefresh({ squadId }: { squadId: string }) {
   const router = useRouter();
@@ -39,6 +39,14 @@ export function LiveRefresh({ squadId }: { squadId: string }) {
           "postgres_changes",
           { event: "*", schema: "public", table: "squad_posts", filter },
           () => router.refresh(),
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "withdrawals", filter },
+          () => router.refresh(),
+        )
+        .on("postgres_changes", { event: "*", schema: "public", table: "withdrawal_votes" }, () =>
+          router.refresh(),
         )
         // Cheers have no squad column; the database's privacy rules limit
         // these events to squads you're in.

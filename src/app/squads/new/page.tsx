@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
-import { NewSquadForm } from "./new-squad-form";
+import { SquadForm } from "../squad-form";
+import { createSquad } from "./actions";
 
 export default function NewSquadPage() {
   return (
@@ -24,7 +25,7 @@ async function SignedInForm() {
   await requireUserId("/squads/new");
   return (
     <div className="mt-6">
-      <NewSquadForm />
+      <SquadForm action={createSquad} submitLabel="Create squad & invite" pendingLabel="Creating…" />
     </div>
   );
 }

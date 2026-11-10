@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { FreezeButton } from "@/components/freeze-button";
 import { SaveSheet } from "@/components/save-sheet";
 import { PageSpinner } from "@/components/spinner";
-import { GOAL_EMOJI, getActiveGoal, getProfile, getStreaks } from "@/lib/data";
+import { GOAL_EMOJI, getActiveGoal, getProfile, getSquadTotals, getStreaks } from "@/lib/data";
 import { levelProgress, levelTitle } from "@/lib/levels";
 import { formatMoney } from "@/lib/money";
 import { daysLeftInWeek, recentWeeks } from "@/lib/streaks";
@@ -79,16 +79,7 @@ async function HomeContent() {
   const lvl = levelProgress(profile.xp);
 
   const squads = (memberships ?? []).flatMap((m) => (m.squads ? [m.squads] : []));
-  const squadTotals = new Map<string, number>();
-  if (squads.length > 0) {
-    const { data: squadSaves } = await supabase
-      .from("saves")
-      .select("squad_id, amount_cents")
-      .in("squad_id", squads.map((s) => s.id));
-    for (const s of squadSaves ?? []) {
-      if (s.squad_id) squadTotals.set(s.squad_id, (squadTotals.get(s.squad_id) ?? 0) + s.amount_cents);
-    }
-  }
+  const squadTotals = await getSquadTotals(supabase, squads.map((s) => s.id));
 
   const spinLeft = spin?.status !== "saved";
 

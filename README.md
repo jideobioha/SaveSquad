@@ -61,8 +61,8 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] Badges (Quarter Streaker, First $100, Squad Starter, …)
 - [x] Profile: total saved, best streak, level path, monthly chart, badges
 - [x] Streak freezes for tight weeks
-- [ ] Withdrawals need a squad vote; squad-rules toggles
-- [ ] Contribution modes: chip in anytime / equal split / weekly
+- [x] Withdrawals need a squad vote; squad-rules toggles
+- [x] Contribution modes: chip in anytime / equal split / weekly
 
 ### Phase 4: Competition
 - [ ] Weekly squad leagues ranked by on-time %
