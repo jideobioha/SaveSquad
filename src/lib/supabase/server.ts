@@ -1,10 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 // Supabase client for Server Components, Server Actions and Route Handlers.
 // Create a new one per request; never share it across requests.
 export async function createClient() {
   const cookieStore = await cookies();
+  // Supabase checks token expiry with Date.now(); mark this as per-request
+  // work so Next.js doesn't try to prerender it.
+  await connection();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

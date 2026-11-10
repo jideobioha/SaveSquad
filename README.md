@@ -41,7 +41,7 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] Supabase project created and connected
 
 ### Phase 1: Must-haves (the wedge: friend groups planning a trip)
-- [ ] Sign in with an email magic link
+- [x] Sign in with an email magic link
 - [ ] Create a squad goal (name, target, deadline) and invite friends by link
 - [ ] Join a squad from an invite link
 - [ ] Squad screen: one shared progress bar, "Who's in", activity feed
