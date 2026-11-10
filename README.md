@@ -50,11 +50,11 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] First deploy to Vercel
 
 ### Phase 2: The core loop
-- [ ] Pick-a-goal onboarding (Trip / Emergency fund / Down payment / Something else)
-- [ ] Home dashboard (goal card, streak row, today's challenge, squad preview)
-- [ ] **Spin the Save** daily challenge
-- [ ] "Streak saved!" celebration and share to squad
-- [ ] XP and levels
+- [x] Pick-a-goal onboarding (Trip / Emergency fund / Down payment / Something else)
+- [x] Home dashboard (goal card, streak row, today's challenge, squad preview)
+- [x] **Spin the Save** daily challenge
+- [x] "Streak saved!" celebration and share to squad
+- [x] XP and levels
 - [ ] Cheer and Nudge; hide my amount
 
 ### Phase 3: Rewards and trust
