@@ -8,6 +8,7 @@ export type Profile = {
   level: number;
   weekly_target_cents: number;
   onboarded: boolean;
+  freezes: number;
 };
 
 export type Streak = {
@@ -20,7 +21,7 @@ export type Streak = {
 export async function getProfile(supabase: SupabaseClient, userId: string) {
   const { data } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_color, xp, level, weekly_target_cents, onboarded")
+    .select("id, display_name, avatar_color, xp, level, weekly_target_cents, onboarded, freezes")
     .eq("id", userId)
     .single<Profile>();
   return data;

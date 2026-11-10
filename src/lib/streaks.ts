@@ -14,7 +14,9 @@ export function recentWeeks(
   weeklyTargetCents: number,
   now: Date,
   count = 8,
+  frozenWeekStarts: string[] = [],
 ) {
+  const frozen = new Set(frozenWeekStarts.map((d) => weekIndex(new Date(d + "T00:00:00Z"))));
   const totals = new Map<number, number>();
   for (const s of saves) {
     const w = weekIndex(new Date(s.created_at));
@@ -23,7 +25,14 @@ export function recentWeeks(
   const thisWeek = weekIndex(now);
   return Array.from({ length: count }, (_, i) => {
     const w = thisWeek - (count - 1 - i);
-    return { week: w, met: (totals.get(w) ?? 0) >= weeklyTargetCents, isCurrent: w === thisWeek };
+    const cents = totals.get(w) ?? 0;
+    return {
+      week: w,
+      cents,
+      met: cents >= weeklyTargetCents,
+      frozen: frozen.has(w) && cents < weeklyTargetCents,
+      isCurrent: w === thisWeek,
+    };
   });
 }
 

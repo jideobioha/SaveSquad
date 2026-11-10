@@ -58,9 +58,9 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] Cheer and Nudge; hide my amount
 
 ### Phase 3: Rewards and trust
-- [ ] Badges (Quarter Streaker, First $100, Squad Starter, …)
-- [ ] Profile: total saved, best streak, level path, monthly chart, badges
-- [ ] Streak freezes for tight weeks
+- [x] Badges (Quarter Streaker, First $100, Squad Starter, …)
+- [x] Profile: total saved, best streak, level path, monthly chart, badges
+- [x] Streak freezes for tight weeks
 - [ ] Withdrawals need a squad vote; squad-rules toggles
 - [ ] Contribution modes: chip in anytime / equal split / weekly
 
@@ -135,6 +135,9 @@ The display name defaults to the part of the email before `@`.
 | `spins` | one Spin the Save per person per day |
 | `squad_posts` | shared streak wins and nudges in a squad's feed |
 | `cheers` | 👏 on squad saves |
+| `user_badges` | badges each person has earned (the badge list lives in `src/lib/badges.ts`) |
+| `streak_freezes` | weeks a person froze; frozen weeks count as on time |
+| `withdrawals`, `withdrawal_votes` | requests to take money out of a squad, and the squad's votes |
 
 Database functions do the work that must not be faked from the browser:
 
@@ -142,7 +145,10 @@ Database functions do the work that must not be faked from the browser:
 |---|---|
 | `record_save` | the only way to add a save; awards XP (+10, +20 for spins, +100 for completing your week) |
 | `spin_today` | picks today's spin amount once, so refreshing can't reroll |
-| `user_streaks` | streak counts for you and your squadmates |
+| `user_streaks` | streak counts for you and your squadmates (frozen weeks count) |
+| `use_freeze` | spends a freeze on the current week |
+| `check_badges` / `refresh_my_badges` | awards newly earned badges |
+| `request_withdrawal` / `vote_withdrawal` | withdrawals and majority voting |
 | `join_squad` / `squad_preview` | joining by invite code |
 
 Row-level security means you can only read squads you belong to. Migrations live in `supabase/migrations/` and are run **in order** in the Supabase SQL Editor. Run a new migration **before** pushing code that needs it.

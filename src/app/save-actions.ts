@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
 import { parseDollarsToCents } from "@/lib/money";
+import { winUrl, type SaveRow } from "@/lib/win-url";
 
 export type SaveState = {
   status: "idle" | "done" | "error";
@@ -14,6 +15,7 @@ export type SaveState = {
 };
 
 type Destination = { squadId: string } | { goalId: string };
+
 
 // Every save goes through public.record_save, which also awards XP.
 export async function recordSave(
@@ -35,11 +37,11 @@ export async function recordSave(
   });
   if (error) return { status: "error", message: error.message };
 
-  const row = (data as { save_id: string; xp_gained: number; week_completed: boolean }[])[0];
+  const row = (data as SaveRow[])[0];
 
-  // Completing your week is the big moment: go to the celebration screen.
-  if (row?.week_completed) {
-    redirect(`/win?save=${row.save_id}&xp=${row.xp_gained}`);
+  // Completing your week or earning a badge is a big moment: celebrate it.
+  if (row?.week_completed || row?.new_badges?.length) {
+    redirect(winUrl(row));
   }
 
   refresh();

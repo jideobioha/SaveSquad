@@ -47,5 +47,7 @@ export async function createSquad(
 
   if (memberError) return { error: memberError.message };
 
+  await supabase.rpc("refresh_my_badges"); // Squad Starter
+
   redirect(`/squads/${squad.id}?created=1`);
 }

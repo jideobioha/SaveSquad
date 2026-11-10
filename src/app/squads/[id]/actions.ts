@@ -9,6 +9,7 @@ export async function toggleCheer(squadId: string, saveId: string, cheered: bool
     await supabase.from("cheers").delete().eq("save_id", saveId).eq("user_id", userId);
   } else {
     await supabase.from("cheers").insert({ save_id: saveId, user_id: userId });
+    await supabase.rpc("refresh_my_badges"); // Team Player
   }
   refresh();
 }

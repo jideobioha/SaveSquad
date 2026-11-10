@@ -5,6 +5,7 @@ import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
 import { getProfile, getStreaks } from "@/lib/data";
 import { levelProgress } from "@/lib/levels";
+import { badgeById } from "@/lib/badges";
 import { formatMoney } from "@/lib/money";
 import { Confetti, ShareButton } from "./celebration";
 
@@ -26,7 +27,7 @@ export default function WinPage({ searchParams }: PageProps<"/win">) {
 }
 
 async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParams">) {
-  const { save: saveId, xp } = await searchParams;
+  const { save: saveId, xp, badges, freeze } = await searchParams;
   const { supabase, userId } = await requireUserId("/");
   if (typeof saveId !== "string") redirect("/");
 
@@ -60,6 +61,9 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
   const destPct = dest ? Math.min(100, Math.round((destTotal / dest.target_cents) * 100)) : 0;
 
   const xpGained = Number(xp) || 0;
+  const newBadges = (typeof badges === "string" ? badges.split(",") : [])
+    .map(badgeById)
+    .filter((b) => b !== undefined);
   const before = levelProgress(Math.max(0, profile.xp - xpGained)).level;
   const now = levelProgress(profile.xp).level;
 
@@ -111,6 +115,28 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
           <span>
             <span className="block text-xs font-extrabold text-brand">LEVEL UP</span>
             <span className="block font-bold">You reached Level {now}</span>
+          </span>
+        </div>
+      )}
+
+      {newBadges.map((b) => (
+        <div key={b.id} className="mt-3 flex w-full items-center gap-3 rounded-3xl bg-white p-4 text-left text-foreground">
+          <span className="flex size-11 items-center justify-center rounded-full bg-lime text-xl">{b.emoji}</span>
+          <span>
+            <span className="block text-xs font-extrabold text-brand">BADGE UNLOCKED</span>
+            <span className="block font-bold">{b.name}</span>
+            <span className="block text-xs text-muted">{b.how}</span>
+          </span>
+        </div>
+      ))}
+
+      {freeze === "1" && (
+        <div className="mt-3 flex w-full items-center gap-3 rounded-3xl bg-white p-4 text-left text-foreground">
+          <span className="flex size-11 items-center justify-center rounded-full bg-sky-100 text-xl">❄️</span>
+          <span>
+            <span className="block text-xs font-extrabold text-brand">STREAK FREEZE EARNED</span>
+            <span className="block font-bold">4 weeks in a row!</span>
+            <span className="block text-xs text-muted">Save it for a tight week.</span>
           </span>
         </div>
       )}

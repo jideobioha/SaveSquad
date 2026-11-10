@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { BottomNav } from "@/components/bottom-nav";
+import { FreezeButton } from "@/components/freeze-button";
 import { SaveSheet } from "@/components/save-sheet";
 import { PageSpinner } from "@/components/spinner";
 import { GOAL_EMOJI, getActiveGoal, getProfile, getStreaks } from "@/lib/data";
@@ -9,7 +10,6 @@ import { levelProgress, levelTitle } from "@/lib/levels";
 import { formatMoney } from "@/lib/money";
 import { daysLeftInWeek, recentWeeks } from "@/lib/streaks";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "./actions";
 import { Landing } from "./landing";
 
 export default function Home() {
@@ -34,7 +34,7 @@ async function HomeContent() {
 
   const today = new Date().toISOString().slice(0, 10);
   const since = new Date(new Date().getTime() - 86_400_000).toISOString();
-  const [streaks, { data: mySaves }, { data: memberships }, { data: spin }, { data: nudgeRow }] = await Promise.all([
+  const [streaks, { data: mySaves }, { data: memberships }, { data: spin }, { data: nudgeRow }, { data: frozen }] = await Promise.all([
     getStreaks(supabase, [userId]),
     supabase.from("saves").select("amount_cents, created_at, goal_id").eq("user_id", userId),
     supabase
@@ -54,6 +54,7 @@ async function HomeContent() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle<{ squad_id: string; profiles: { display_name: string } | null }>(),
+    supabase.from("streak_freezes").select("week_start").eq("user_id", userId),
   ]);
 
   const now = new Date();
@@ -61,7 +62,14 @@ async function HomeContent() {
   const current = streak?.current_weeks ?? 0;
   const thisWeek = streak?.this_week_cents ?? 0;
   const remaining = Math.max(0, profile.weekly_target_cents - thisWeek);
-  const weeks = recentWeeks(mySaves ?? [], profile.weekly_target_cents, now);
+  const weeks = recentWeeks(
+    mySaves ?? [],
+    profile.weekly_target_cents,
+    now,
+    8,
+    (frozen ?? []).map((f) => f.week_start),
+  );
+  const frozenThisWeek = weeks[weeks.length - 1].frozen;
   const daysLeft = daysLeftInWeek(now);
 
   const goalSaved = (mySaves ?? [])
@@ -101,9 +109,6 @@ async function HomeContent() {
           <span className="ml-auto rounded-full bg-flame/10 px-3 py-1 text-sm font-bold text-flame">
             🔥 {current}
           </span>
-          <form action={signOut}>
-            <button className="text-xs font-semibold text-muted hover:text-foreground">Sign out</button>
-          </form>
         </header>
 
         {nudgeRow && remaining > 0 && (
@@ -148,7 +153,9 @@ async function HomeContent() {
             <span className="ml-auto text-xs font-semibold text-muted">Best {streak?.best_weeks ?? 0}</span>
           </div>
           <p className="mt-1 text-sm text-muted">
-            {remaining === 0
+            {frozenThisWeek && remaining > 0
+              ? "❄️ This week is frozen. Your streak is safe."
+              : remaining === 0
               ? `✓ This week is done. You're on ${current} ${current === 1 ? "week" : "weeks"}.`
               : `Save ${formatMoney(remaining, { showCents: remaining % 100 !== 0 })} ${
                   daysLeft === 0 ? "today" : "by Sunday"
@@ -161,12 +168,14 @@ async function HomeContent() {
                   className={`flex size-8 items-center justify-center rounded-full text-xs font-bold ${
                     w.met
                       ? "bg-flame text-white"
-                      : w.isCurrent
+                      : w.frozen
+                        ? "bg-sky-100"
+                        : w.isCurrent
                         ? "border-2 border-dashed border-flame text-flame"
                         : "bg-black/5 text-muted"
                   }`}
                 >
-                  {w.met ? "✓" : ""}
+                  {w.met ? "✓" : w.frozen ? "❄️" : ""}
                 </span>
                 <span className={`text-[10px] ${w.isCurrent ? "font-bold text-foreground" : "text-muted"}`}>
                   {w.isCurrent ? "Now" : `W${i + 1}`}
@@ -187,6 +196,11 @@ async function HomeContent() {
               defaultAmount={remaining > 0 ? Math.ceil(remaining / 100) : undefined}
               buttonClassName="w-full rounded-full bg-foreground py-3 font-bold text-white"
             />
+            {remaining > 0 && !frozenThisWeek && profile.freezes > 0 && daysLeft <= 2 && (
+              <div className="mt-2">
+                <FreezeButton freezes={profile.freezes} />
+              </div>
+            )}
           </div>
         </section>
 

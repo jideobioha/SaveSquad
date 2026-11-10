@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
 import { parseDollarsToCents } from "@/lib/money";
+import { winUrl, type SaveRow } from "@/lib/win-url";
 
 export type SpinResult = { amountCents: number; segment: number; status: "pending" | "saved" };
 
@@ -28,6 +29,5 @@ export async function saveSpin(goalId: string, formData: FormData) {
   });
   if (error) redirect(`/challenges?error=${encodeURIComponent(error.message)}`);
 
-  const row = (data as { save_id: string; xp_gained: number }[])[0];
-  redirect(`/win?save=${row.save_id}&xp=${row.xp_gained}`);
+  redirect(winUrl((data as SaveRow[])[0]));
 }
