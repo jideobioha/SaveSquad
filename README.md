@@ -55,7 +55,7 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] **Spin the Save** daily challenge
 - [x] "Streak saved!" celebration and share to squad
 - [x] XP and levels
-- [ ] Cheer and Nudge; hide my amount
+- [x] Cheer and Nudge; hide my amount
 
 ### Phase 3: Rewards and trust
 - [ ] Badges (Quarter Streaker, First $100, Squad Starter, …)
@@ -127,15 +127,25 @@ The display name defaults to the part of the email before `@`.
 
 | Table | What it holds |
 |---|---|
-| `profiles` | display name, avatar color, XP, level |
+| `profiles` | display name, avatar color, XP, level, weekly target, onboarded flag |
+| `goals` | personal goal: kind (trip / emergency / down payment / other), name, target, deadline |
 | `squads` | shared goal: name, target, deadline, rules, invite code |
-| `squad_members` | who's in, each member's weekly target, hide-amount flag |
-| `saves` | self-reported saves (amount, source, time) |
-| `cheers` | reactions on squad activity |
+| `squad_members` | who's in, hide-amount flag |
+| `saves` | self-reported saves to a goal **or** a squad (amount, source: manual / spin) |
+| `spins` | one Spin the Save per person per day |
+| `squad_posts` | shared streak wins and nudges in a squad's feed |
+| `cheers` | 👏 on squad saves |
 
-Later phases add `goals`, `spins`, `streak_freezes`, `badges`, `withdrawals`/`withdrawal_votes` and `duels`.
+Database functions do the work that must not be faked from the browser:
 
-Row-level security means you can only read squads you belong to. Joining goes through an invite code.
+| Function | Does |
+|---|---|
+| `record_save` | the only way to add a save; awards XP (+10, +20 for spins, +100 for completing your week) |
+| `spin_today` | picks today's spin amount once, so refreshing can't reroll |
+| `user_streaks` | streak counts for you and your squadmates |
+| `join_squad` / `squad_preview` | joining by invite code |
+
+Row-level security means you can only read squads you belong to. Migrations live in `supabase/migrations/` and are run **in order** in the Supabase SQL Editor. Run a new migration **before** pushing code that needs it.
 
 ## Project structure
 

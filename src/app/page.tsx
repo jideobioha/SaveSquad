@@ -33,7 +33,8 @@ async function HomeContent() {
   if (!profile?.onboarded || !goal) redirect("/onboarding");
 
   const today = new Date().toISOString().slice(0, 10);
-  const [streaks, { data: mySaves }, { data: memberships }, { data: spin }] = await Promise.all([
+  const since = new Date(new Date().getTime() - 86_400_000).toISOString();
+  const [streaks, { data: mySaves }, { data: memberships }, { data: spin }, { data: nudgeRow }] = await Promise.all([
     getStreaks(supabase, [userId]),
     supabase.from("saves").select("amount_cents, created_at, goal_id").eq("user_id", userId),
     supabase
@@ -43,6 +44,16 @@ async function HomeContent() {
       .order("joined_at", { ascending: false })
       .returns<{ squads: { id: string; name: string; target_cents: number } | null }[]>(),
     supabase.from("spins").select("status").eq("user_id", userId).eq("day", today).maybeSingle(),
+    // Most recent nudge someone sent you in the last day.
+    supabase
+      .from("squad_posts")
+      .select("squad_id, profiles!squad_posts_user_id_fkey(display_name)")
+      .eq("kind", "nudge")
+      .eq("target_user_id", userId)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ squad_id: string; profiles: { display_name: string } | null }>(),
   ]);
 
   const now = new Date();
@@ -94,6 +105,19 @@ async function HomeContent() {
             <button className="text-xs font-semibold text-muted hover:text-foreground">Sign out</button>
           </form>
         </header>
+
+        {nudgeRow && remaining > 0 && (
+          <Link
+            href={`/squads/${nudgeRow.squad_id}`}
+            className="flex items-center gap-3 rounded-3xl bg-flame/10 px-5 py-3"
+          >
+            <span className="text-2xl">👋</span>
+            <span className="text-sm">
+              <strong>{nudgeRow.profiles?.display_name ?? "A friend"}</strong> nudged you. Your squad is
+              counting on your streak this week!
+            </span>
+          </Link>
+        )}
 
         {/* Goal card: your goal is your level. */}
         <section className="rounded-3xl bg-brand p-5 text-white">

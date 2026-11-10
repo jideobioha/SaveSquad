@@ -7,6 +7,7 @@ import { requireUserId } from "@/lib/auth";
 import { getStreaks } from "@/lib/data";
 import { formatMoney } from "@/lib/money";
 import { timeAgo } from "@/lib/streaks";
+import { CheerButton, HideAmountToggle, NudgeButton } from "./buttons";
 import { InviteCard } from "./invite-card";
 import { LiveRefresh } from "./live-refresh";
 
@@ -68,8 +69,28 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
   if (!squad) notFound();
   const members = membersData ?? [];
   const saves = savesData ?? [];
-  const streaks = await getStreaks(supabase, members.map((m) => m.user_id));
   const now = new Date();
+  const since = new Date(now.getTime() - 86_400_000).toISOString();
+  const [streaks, { data: cheersData }, { data: myNudges }] = await Promise.all([
+    getStreaks(supabase, members.map((m) => m.user_id)),
+    saves.length > 0
+      ? supabase.from("cheers").select("save_id, user_id").in("save_id", saves.map((s) => s.id))
+      : Promise.resolve({ data: [] as { save_id: string; user_id: string }[] }),
+    supabase
+      .from("squad_posts")
+      .select("target_user_id")
+      .eq("squad_id", id)
+      .eq("user_id", userId)
+      .eq("kind", "nudge")
+      .gte("created_at", since),
+  ]);
+
+  const cheers = new Map<string, { count: number; mine: boolean }>();
+  for (const c of cheersData ?? []) {
+    const cur = cheers.get(c.save_id) ?? { count: 0, mine: false };
+    cheers.set(c.save_id, { count: cur.count + 1, mine: cur.mine || c.user_id === userId });
+  }
+  const nudgedToday = new Set((myNudges ?? []).map((n) => n.target_user_id));
 
   const totals = new Map<string, number>();
   for (const s of saves) totals.set(s.user_id, (totals.get(s.user_id) ?? 0) + s.amount_cents);
@@ -89,6 +110,9 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
     };
   });
   const byId = new Map(rows.map((r) => [r.user_id, r]));
+  const me = rows.find((r) => r.isMe);
+  // Hidden amounts are pooled into one grey segment so the bar never gives them away.
+  const hiddenTotal = rows.filter((r) => r.hidden).reduce((a, r) => a + r.total, 0);
 
   const total = saves.reduce((a, s) => a + s.amount_cents, 0);
   const pct = Math.min(100, Math.round((total / squad.target_cents) * 100));
@@ -129,13 +153,16 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
         {/* One shared bar. With amounts visible, each friend gets a segment in their color. */}
         <div className="mt-3 flex h-3 gap-0.5 overflow-hidden rounded-full bg-black/10">
           {squad.show_amounts ? (
-            rows.map((r) => {
-              const share = (r.total / squad.target_cents) * 100;
+            [
+              ...rows.filter((r) => !r.hidden).map((r) => ({ key: r.user_id, cents: r.total, color: r.color })),
+              { key: "hidden", cents: hiddenTotal, color: "#b9b6c9" },
+            ].map((seg) => {
+              const share = (seg.cents / squad.target_cents) * 100;
               return share > 0 ? (
                 <div
-                  key={r.user_id}
+                  key={seg.key}
                   className="h-full transition-[width] duration-700"
-                  style={{ width: `${Math.min(share, 100)}%`, background: r.color }}
+                  style={{ width: `${Math.min(share, 100)}%`, background: seg.color }}
                 />
               ) : null;
             })
@@ -154,12 +181,26 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
       </div>
 
       <section className="mt-6">
-        <h3 className="font-bold">Who&apos;s in</h3>
+        <div className="flex items-center">
+          <h3 className="font-bold">Who&apos;s in</h3>
+          {squad.show_amounts && me && (
+            <span className="ml-auto">
+              <HideAmountToggle squadId={squad.id} hidden={me.hide_amount} />
+            </span>
+          )}
+        </div>
         <ul className="mt-2 space-y-2">
           {rows.map((r) => (
             <li key={r.user_id} className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3">
               <Avatar name={r.displayName} color={r.color} />
               <span className="flex-1 font-semibold">{r.label}</span>
+              {!r.isMe && (
+                <NudgeButton
+                  squadId={squad.id}
+                  targetUserId={r.user_id}
+                  alreadyNudged={nudgedToday.has(r.user_id)}
+                />
+              )}
               <span className={`text-sm font-bold ${r.streak > 0 ? "text-flame" : "text-muted"}`}>
                 🔥 {r.streak} wk
               </span>
@@ -192,6 +233,15 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
                         : `nudged ${item.target_user_id === userId ? "you" : (byId.get(item.target_user_id ?? "")?.displayName ?? "a friend")} 👋`}
                     <span className="block text-xs text-muted">{timeAgo(item.created_at, now)}</span>
                   </span>
+                  {item.type === "save" && (
+                    <CheerButton
+                      squadId={squad.id}
+                      saveId={item.id}
+                      count={cheers.get(item.id)?.count ?? 0}
+                      cheered={cheers.get(item.id)?.mine ?? false}
+                      disabled={item.user_id === userId}
+                    />
+                  )}
                 </li>
               );
             })}
