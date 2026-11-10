@@ -24,12 +24,23 @@ export async function startStreak(
   if (!name || name.length > 60) return { error: "Give your goal a name." };
   if (!targetCents) return { error: "Enter a target amount." };
   if (!deadline || new Date(deadline) <= new Date()) return { error: "Pick a date in the future." };
-  if (!weeklyCents) return { error: "Enter a weekly amount." };
 
-  const { error } = await supabase
+  const { data: goal, error } = await supabase
     .from("goals")
-    .insert({ user_id: userId, kind, name, target_cents: targetCents, deadline });
-  if (error) return { error: error.message };
+    .insert({ user_id: userId, kind, name, target_cents: targetCents, deadline })
+    .select("id")
+    .single();
+  if (error || !goal) return { error: error?.message ?? "Couldn't save the goal." };
+
+  // Adding another goal later: keep your weekly target, optionally make it your main goal.
+  if (formData.get("mode") === "add") {
+    if (formData.get("make_main") === "on") {
+      await supabase.rpc("set_primary_goal", { p_goal_id: goal.id });
+    }
+    redirect("/goals");
+  }
+
+  if (!weeklyCents) return { error: "Enter a weekly amount." };
 
   const { error: profileError } = await supabase
     .from("profiles")

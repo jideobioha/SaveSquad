@@ -40,16 +40,33 @@ export type Goal = {
   deadline: string;
 };
 
-// Phase 2 has one active goal per person: the most recent.
+// Your main goal (Home card, where spins go): the one you picked, or else your newest.
 export async function getActiveGoal(supabase: SupabaseClient, userId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("primary_goal_id")
+    .eq("id", userId)
+    .single<{ primary_goal_id: string | null }>();
+
+  let query = supabase
+    .from("goals")
+    .select("id, kind, name, target_cents, deadline")
+    .eq("user_id", userId);
+  query = profile?.primary_goal_id
+    ? query.eq("id", profile.primary_goal_id)
+    : query.order("created_at", { ascending: false }).limit(1);
+  const { data } = await query.maybeSingle<Goal>();
+  return data;
+}
+
+export async function getGoals(supabase: SupabaseClient, userId: string) {
   const { data } = await supabase
     .from("goals")
     .select("id, kind, name, target_cents, deadline")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle<Goal>();
-  return data;
+    .order("created_at", { ascending: true })
+    .returns<Goal[]>();
+  return data ?? [];
 }
 
 export const GOAL_EMOJI: Record<Goal["kind"], string> = {

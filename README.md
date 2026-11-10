@@ -65,9 +65,9 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] Contribution modes: chip in anytime / equal split / weekly
 
 ### Phase 4: Competition
-- [ ] Weekly squad leagues ranked by on-time %
-- [ ] 1-on-1 friend duels
-- [ ] Multiple solo goals alongside squads
+- [x] Weekly squad leagues ranked by on-time %
+- [x] 1-on-1 friend duels
+- [x] Multiple solo goals alongside squads
 
 ## Key rules
 
@@ -127,7 +127,7 @@ The display name defaults to the part of the email before `@`.
 
 | Table | What it holds |
 |---|---|
-| `profiles` | display name, avatar color, XP, level, weekly target, onboarded flag |
+| `profiles` | display name, avatar color, XP, level, weekly target, onboarded flag, freezes, main goal |
 | `goals` | personal goal: kind (trip / emergency / down payment / other), name, target, deadline |
 | `squads` | shared goal: name, target, deadline, rules, invite code |
 | `squad_members` | who's in, hide-amount flag |
@@ -138,6 +138,7 @@ The display name defaults to the part of the email before `@`.
 | `user_badges` | badges each person has earned (the badge list lives in `src/lib/badges.ts`) |
 | `streak_freezes` | weeks a person froze; frozen weeks count as on time |
 | `withdrawals`, `withdrawal_votes` | requests to take money out of a squad, and the squad's votes |
+| `duels`, `duel_checkins` | 1-on-1 week-long friend challenges and each day's check-in |
 
 Database functions do the work that must not be faked from the browser:
 
@@ -149,6 +150,9 @@ Database functions do the work that must not be faked from the browser:
 | `use_freeze` | spends a freeze on the current week |
 | `check_badges` / `refresh_my_badges` | awards newly earned badges |
 | `request_withdrawal` / `vote_withdrawal` | withdrawals and majority voting |
+| `league_standings` | this week's on-time % for every squad in the league |
+| `create_duel` / `respond_duel` / `check_in_duel` / `mark_duel_paid` | friend duels |
+| `set_primary_goal` | picks your main goal (Home card, daily spins) |
 | `join_squad` / `squad_preview` | joining by invite code |
 
 Row-level security means you can only read squads you belong to. Migrations live in `supabase/migrations/` and are run **in order** in the Supabase SQL Editor. Run a new migration **before** pushing code that needs it.

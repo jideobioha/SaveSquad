@@ -22,7 +22,7 @@ function suggestWeekly(target: string, deadline: string) {
   return Math.ceil(t / weeks);
 }
 
-export function OnboardingForm() {
+export function OnboardingForm({ mode = "first" }: { mode?: "first" | "add" }) {
   const [state, action, pending] = useActionState<OnboardingState, FormData>(startStreak, {});
   const [kind, setKind] = useState("trip");
   const [target, setTarget] = useState("");
@@ -45,6 +45,7 @@ export function OnboardingForm() {
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="kind" value={kind} />
+      <input type="hidden" name="mode" value={mode} />
       <div className="grid grid-cols-2 gap-3">
         {KINDS.map((k) => (
           <button
@@ -92,28 +93,41 @@ export function OnboardingForm() {
         </label>
       </div>
 
-      <label className="block">
-        <span className="text-sm font-semibold">Each week, I&apos;ll save</span>
-        <div className="mt-1 flex items-center rounded-2xl border border-black/10 bg-card px-4 py-3 focus-within:border-brand">
-          <span className="text-muted">$</span>
-          <input
-            name="weekly"
-            required
-            inputMode="decimal"
-            value={weekly}
-            onChange={(e) => {
-              setWeekly(e.target.value);
-              setWeeklyTouched(true);
-            }}
-            placeholder="25"
-            className="w-full bg-transparent pl-1 outline-none"
-          />
-          <span className="text-sm text-muted">/ week</span>
-        </div>
-        <span className="mt-1 block text-xs text-muted">
-          {weeklyTouched ? "Hit this each week to grow your streak." : "Suggested from your target and date. Change it anytime."}
-        </span>
-      </label>
+      {mode === "first" && (
+        <label className="block">
+          <span className="text-sm font-semibold">Each week, I&apos;ll save</span>
+          <div className="mt-1 flex items-center rounded-2xl border border-black/10 bg-card px-4 py-3 focus-within:border-brand">
+            <span className="text-muted">$</span>
+            <input
+              name="weekly"
+              required
+              inputMode="decimal"
+              value={weekly}
+              onChange={(e) => {
+                setWeekly(e.target.value);
+                setWeeklyTouched(true);
+              }}
+              placeholder="25"
+              className="w-full bg-transparent pl-1 outline-none"
+            />
+            <span className="text-sm text-muted">/ week</span>
+          </div>
+          <span className="mt-1 block text-xs text-muted">
+            {weeklyTouched ? "Hit this each week to grow your streak." : "Suggested from your target and date. Change it anytime."}
+          </span>
+        </label>
+      )}
+
+      {mode === "add" && (
+        <label className="flex items-center gap-3 rounded-3xl bg-card p-4">
+          <span className="flex-1">
+            <span className="block text-sm font-semibold">Make this my main goal</span>
+            <span className="block text-xs text-muted">Shown on Home. Daily spins go here.</span>
+          </span>
+          <input type="checkbox" name="make_main" className="peer sr-only" />
+          <span className="relative h-7 w-12 rounded-full bg-black/15 transition peer-checked:bg-brand after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-5" />
+        </label>
+      )}
 
       <div className="flex items-center gap-3 rounded-3xl bg-card p-4">
         <span className="text-xl">🛡️</span>
@@ -132,7 +146,7 @@ export function OnboardingForm() {
         disabled={pending}
         className="w-full rounded-full bg-brand py-3.5 font-bold text-white transition hover:bg-brand-dark disabled:opacity-60"
       >
-        {pending ? "Starting…" : "Start my streak"}
+        {pending ? "Saving…" : mode === "add" ? "Add goal" : "Start my streak"}
       </button>
     </form>
   );

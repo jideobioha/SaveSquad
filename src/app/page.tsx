@@ -120,9 +120,14 @@ async function HomeContent() {
           <span className="rounded-full bg-lime px-3 py-1 text-xs font-extrabold text-foreground">
             LEVEL {lvl.level} · {levelTitle(lvl.level).toUpperCase()}
           </span>
-          <h2 className="mt-3 text-2xl font-extrabold">
-            {GOAL_EMOJI[goal.kind]} {goal.name}
-          </h2>
+          <div className="mt-3 flex items-baseline">
+            <h2 className="text-2xl font-extrabold">
+              {GOAL_EMOJI[goal.kind]} {goal.name}
+            </h2>
+            <Link href="/goals" className="ml-auto text-xs font-bold text-lime">
+              All goals →
+            </Link>
+          </div>
           <p className="mt-1 text-lg font-bold">
             {formatMoney(goalSaved)} <span className="text-white/60">/ {formatMoney(goal.target_cents)}</span>
           </p>
