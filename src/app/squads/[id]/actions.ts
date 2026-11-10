@@ -28,3 +28,15 @@ export async function chipIn(
   refresh();
   return { status: "done", message: String(cents) };
 }
+
+export async function updateWeeklyTarget(squadId: string, formData: FormData) {
+  const { supabase, userId } = await requireUserId(`/squads/${squadId}`);
+  const cents = parseDollarsToCents(formData.get("weekly"));
+  if (!cents || cents > MAX_CENTS) return;
+  await supabase
+    .from("squad_members")
+    .update({ weekly_target_cents: cents })
+    .eq("squad_id", squadId)
+    .eq("user_id", userId);
+  refresh();
+}

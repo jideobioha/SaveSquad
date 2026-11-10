@@ -44,9 +44,9 @@ We build from must-haves to nice-to-haves until everything in the deck exists.
 - [x] Sign in with an email magic link
 - [x] Create a squad goal (name, target, deadline) and invite friends by link
 - [x] Join a squad from an invite link
-- [ ] Squad screen: one shared progress bar, "Who's in", activity feed
+- [x] Squad screen: one shared progress bar, "Who's in", activity feed
 - [x] Chip in any amount, with the bar updating live for everyone
-- [ ] Weekly streaks per member
+- [x] Weekly streaks per member
 - [ ] First deploy to Vercel
 
 ### Phase 2: The core loop
