@@ -24,7 +24,16 @@
   --font-sans: var(--font-jakarta);
 }
 
+/* The app draws edge to edge (viewport-fit=cover), so the page background
+   is what shows in the phone's corners, behind the notch and home bar, and
+   when you pull past the top or bottom. Match it to the screen's color. */
+html,
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+html:has([data-tone="brand"]),
+html:has([data-tone="brand"]) body {
+  background: var(--brand);
 }

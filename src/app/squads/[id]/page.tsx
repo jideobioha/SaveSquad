@@ -397,7 +397,7 @@ async function SquadContent({ params }: Pick<PageProps<"/squads/[id]">, "params"
         )}
       </section>
 
-      <div className="sticky bottom-0 mt-auto bg-gradient-to-t from-background via-background pt-6 pb-6">
+      <div className="sticky bottom-0 mt-auto bg-gradient-to-t from-background via-background pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <SaveSheet
           destination={{ squadId: squad.id }}
           buttonLabel="Chip in"

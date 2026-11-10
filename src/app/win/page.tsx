@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { BrandTone } from "@/components/brand-tone";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
 import { getProfile, getSquadTotals, getStreaks } from "@/lib/data";
@@ -71,7 +72,8 @@ async function WinContent({ searchParams }: Pick<PageProps<"/win">, "searchParam
   const now = levelProgress(profile.xp).level;
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-brand px-6 py-10 text-center text-white">
+    <main data-tone="brand" className="flex flex-1 flex-col items-center bg-brand px-6 py-10 text-center text-white">
+      <BrandTone />
       <Confetti />
 
       {/* Streak ring */}

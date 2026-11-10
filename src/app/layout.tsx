@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#5b3ff0",
+  // Draw under the notch and home bar; safe-area padding below keeps content clear of them.
+  viewportFit: "cover",
+  themeColor: "#f4f3fb",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -21,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${jakarta.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
         {/* Mobile-first: the app lives in a phone-width column. */}
-        <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
+        <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
           {children}
         </div>
       </body>

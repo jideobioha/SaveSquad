@@ -112,7 +112,7 @@ export function NewDuel({ friends }: { friends: { id: string; name: string; colo
           <form
             action={action}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-background p-6 pb-10"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-background p-6 pb-[max(2.5rem,env(safe-area-inset-bottom))]"
           >
             <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-black/15" />
             <h2 className="text-xl font-bold">New friend duel</h2>

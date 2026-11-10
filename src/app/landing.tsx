@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { BrandTone } from "@/components/brand-tone";
 
 export function Landing() {
   return (
-    <main className="flex flex-1 flex-col justify-between bg-brand px-6 py-12 text-white">
+    <main data-tone="brand" className="flex flex-1 flex-col justify-between bg-brand px-6 py-12 text-white">
+      <BrandTone />
       <div className="mt-16">
         <h1 className="text-5xl font-extrabold tracking-tight">SaveSquad</h1>
         <p className="mt-3 text-2xl font-bold text-lime">

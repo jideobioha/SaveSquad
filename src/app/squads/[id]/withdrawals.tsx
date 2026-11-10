@@ -27,7 +27,7 @@ export function WithdrawButton({ squadId, needsVote }: { squadId: string; needsV
           <form
             action={action}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-t-3xl bg-background p-6 pb-10"
+            className="w-full max-w-md rounded-t-3xl bg-background p-6 pb-[max(2.5rem,env(safe-area-inset-bottom))]"
           >
             <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-black/15" />
             <h2 className="text-xl font-bold">Take money out</h2>

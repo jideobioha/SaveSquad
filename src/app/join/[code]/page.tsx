@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { BrandTone } from "@/components/brand-tone";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
 import { formatMoney } from "@/lib/money";
@@ -57,7 +58,8 @@ async function JoinContent({ params }: Pick<PageProps<"/join/[code]">, "params">
   });
 
   return (
-    <main className="flex flex-1 flex-col justify-between bg-brand px-6 py-12 text-white">
+    <main data-tone="brand" className="flex flex-1 flex-col justify-between bg-brand px-6 py-12 text-white">
+      <BrandTone />
       <div className="mt-12">
         <p className="font-semibold text-lime">You&apos;re invited to save together</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">{squad.name}</h1>
