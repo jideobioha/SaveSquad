@@ -33,7 +33,7 @@ body {
   color: var(--foreground);
 }
 
-html:has([data-tone="brand"]),
-html:has([data-tone="brand"]) body {
+html[data-tone="brand"],
+html[data-tone="brand"] body {
   background: var(--brand);
 }

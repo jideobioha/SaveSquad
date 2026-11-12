@@ -58,7 +58,7 @@ async function JoinContent({ params }: Pick<PageProps<"/join/[code]">, "params">
   });
 
   return (
-    <main data-tone="brand" className="flex flex-1 flex-col justify-between bg-brand px-6 py-12 text-white">
+    <main className="flex flex-1 flex-col justify-between bg-brand px-6 py-12 text-white">
       <BrandTone />
       <div className="mt-12">
         <p className="font-semibold text-lime">You&apos;re invited to save together</p>
