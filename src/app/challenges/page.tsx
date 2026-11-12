@@ -5,9 +5,14 @@ import { BottomNav } from "@/components/bottom-nav";
 import { PageSpinner } from "@/components/spinner";
 import { requireUserId } from "@/lib/auth";
 import { getActiveGoal } from "@/lib/data";
+import { PremiumCard } from "./premium-card";
 import { Wheel } from "./wheel";
 
 const AMOUNTS = [500, 1000, 2000, 300, 1200, 800, 1500, 2500];
+
+// Pricing test (supabase/migrations/0005_premium_test.sql). Changing the
+// price starts a fresh count for the new price.
+const PREMIUM_PRICE_CENTS = 399;
 
 export default function ChallengesPage({ searchParams }: PageProps<"/challenges">) {
   return (
@@ -39,12 +44,20 @@ async function SpinContent({ searchParams }: Pick<PageProps<"/challenges">, "sea
   if (!goal) redirect("/onboarding");
 
   const today = new Date().toISOString().slice(0, 10);
-  const { data: spin } = await supabase
-    .from("spins")
-    .select("amount_cents, status")
-    .eq("user_id", userId)
-    .eq("day", today)
-    .maybeSingle<{ amount_cents: number; status: "pending" | "saved" }>();
+  const [{ data: spin }, { data: premium }] = await Promise.all([
+    supabase
+      .from("spins")
+      .select("amount_cents, status")
+      .eq("user_id", userId)
+      .eq("day", today)
+      .maybeSingle<{ amount_cents: number; status: "pending" | "saved" }>(),
+    supabase
+      .from("premium_interest")
+      .select("joined_at")
+      .eq("user_id", userId)
+      .eq("price_cents", PREMIUM_PRICE_CENTS)
+      .maybeSingle<{ joined_at: string | null }>(),
+  ]);
 
   const { error } = await searchParams;
 
@@ -64,6 +77,7 @@ async function SpinContent({ searchParams }: Pick<PageProps<"/challenges">, "sea
             : null
         }
       />
+      <PremiumCard priceCents={PREMIUM_PRICE_CENTS} joined={Boolean(premium?.joined_at)} />
     </>
   );
 }

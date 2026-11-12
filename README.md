@@ -162,6 +162,7 @@ For a public launch, use a transactional email service such as Resend or Postmar
 | `streak_freezes` | weeks a person froze; frozen weeks count as on time |
 | `withdrawals`, `withdrawal_votes` | requests to take money out of a squad, and the squad's votes |
 | `duels`, `duel_checkins` | 1-on-1 week-long friend challenges and each day's check-in |
+| `premium_interest` | pricing test: who saw the Premium waitlist card, how often, and who tapped |
 
 Database functions do the work that must not be faked from the browser:
 
@@ -177,8 +178,18 @@ Database functions do the work that must not be faked from the browser:
 | `create_duel` / `respond_duel` / `check_in_duel` / `mark_duel_paid` | friend duels |
 | `set_primary_goal` | picks your main goal (Home card, daily spins) |
 | `join_squad` / `squad_preview` | joining by invite code |
+| `premium_seen` / `join_premium_waitlist` | logs Premium card views and waitlist taps |
 
 Row-level security means you can only read squads you belong to. Migrations live in `supabase/migrations/` and are run **in order** in the Supabase SQL Editor. Run a new migration **before** pushing code that needs it.
+
+## Pricing test: Premium waitlist
+
+The Challenges tab shows a **"Join the Premium waitlist, $3.99/month"** button. Tapping it shows "You're on the list!" Nothing is charged. It tests whether people would pay (3 of 20 interviewees pushed back on subscriptions).
+
+- A **view** is logged when the card is at least half on screen, not when the page is merely loaded in the background. A **tap** is logged once per person.
+- **Results:** run [`supabase/queries/premium_test_results.sql`](./supabase/queries/premium_test_results.sql) in the SQL Editor. It shows people who saw it, people who tapped, the tap rate, and total views.
+- To test another price, change `PREMIUM_PRICE_CENTS` in `src/app/challenges/page.tsx`. Each price is counted separately.
+- Leave your own test accounts out of the results, or start the count fresh before the pilot with `delete from public.premium_interest;`.
 
 ## Project structure
 
